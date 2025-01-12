@@ -1,0 +1,455 @@
+import java.util.*;
+
+public class FoodOrderingSystem {
+
+    // Enum to represent payment methods
+    enum PaymentMethod {
+        CASH, UPI, CREDIT_CARD, DIGITAL_WALLET
+    }
+
+    // Enum to represent order status
+    enum OrderStatus {
+        ORDER_PLACED, PREPARING, OUT_FOR_DELIVERY, PICKED_UP, DELIVERED
+    }
+
+    // Class to represent feedback for an order
+    static class Feedback {
+        int rating; // Rating out of 5
+        String comment;
+
+        Feedback(int rating, String comment) {
+            this.rating = rating;
+            this.comment = comment;
+        }
+
+        void displayFeedback() {
+            System.out.printf("Rating: %d/5%n", rating);
+            System.out.println("Comment: " + comment);
+        }
+    }
+
+    // Class to represent a menu item
+    static class MenuItem {
+        String name;
+        double price;
+
+        MenuItem(String name, double price) {
+            this.name = name;
+            this.price = price;
+        }
+    }
+
+    // Class to represent a restaurant
+    static class Restaurant {
+        String name;
+        List<MenuItem> menu;
+
+        Restaurant(String name, List<MenuItem> menu) {
+            this.name = name;
+            this.menu = menu;
+        }
+    }
+
+    // Class to represent an order
+    static class Order {
+        String orderNumber;
+        String customerName;
+        String customerContact;
+        String customerAddress;
+        String restaurantName;
+        List<MenuItem> items;
+        double totalCost;
+        PaymentMethod paymentMethod;
+        OrderStatus status;
+        Feedback feedback; // Feedback for the order
+
+        Order(String orderNumber, String customerName, String customerContact, String customerAddress, String restaurantName, List<MenuItem> items, double totalCost, PaymentMethod paymentMethod) {
+            this.orderNumber = orderNumber;
+            this.customerName = customerName;
+            this.customerContact = customerContact;
+            this.customerAddress = customerAddress;
+            this.restaurantName = restaurantName;
+            this.items = new ArrayList<>(items);
+            this.totalCost = totalCost;
+            this.paymentMethod = paymentMethod;
+            this.status = OrderStatus.ORDER_PLACED; // Initial status when the order is placed
+            this.feedback = null; // No feedback initially
+        }
+
+        // Method to update the order status
+        void updateStatus(OrderStatus newStatus) {
+            this.status = newStatus;
+        }
+
+        // Method to add feedback to the order
+        void addFeedback(int rating, String comment) {
+            this.feedback = new Feedback(rating, comment);
+        }
+
+        void displayOrder() {
+            System.out.printf("Order Number: %s%n", orderNumber);
+            System.out.printf("Customer: %s(Contact: %s, Address: %s)%n",
+                    customerName != null ? customerName : "N/A",
+                    customerContact != null ? customerContact : "N/A",
+                    customerAddress != null ? customerAddress : "N/A");
+            System.out.println("Restaurant: " + restaurantName);
+
+            for (MenuItem item : items) {
+                System.out.printf("- %s: Rs%.2f%n", item.name, item.price);
+            }
+            System.out.printf("Total: Rs%.2f%n", totalCost);
+            System.out.println("Payment Method: " + paymentMethod);
+            System.out.println("Order Status: " + status);
+
+            if (feedback != null) {
+                System.out.println("Feedback:");
+                feedback.displayFeedback();
+            } else {
+                System.out.println("No feedback yet.");
+            }
+        }
+    }
+
+    // Class to represent a user
+    static class User {
+        String username;
+        String password;
+
+        User(String username, String password) {
+            this.username = username;
+            this.password = password;
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Simulated user database
+        Map<String, String> userDatabase = new HashMap<>();
+        boolean loggedIn = false;
+
+        // Create restaurants with menus
+        List<Restaurant> restaurants = new ArrayList<>();
+        restaurants.add(new Restaurant("Hotel Paradise", Arrays.asList(
+                new MenuItem("Pizza", 129),
+                new MenuItem("Pasta", 109),
+                new MenuItem("Salad", 69),
+                new MenuItem("Soda", 49)
+        )));
+        restaurants.add(new Restaurant("The Gourmet Kitchen", Arrays.asList(
+                new MenuItem("Burger", 89),
+                new MenuItem("Fries", 49),
+                new MenuItem("Shake", 49),
+                new MenuItem("Spring Roll", 99)
+        )));
+        restaurants.add(new Restaurant("Tandoori Tales", Arrays.asList(
+                new MenuItem("Tandoori Chicken", 199),
+                new MenuItem("Paneer Tikka", 129),
+                new MenuItem("Naan", 49),
+                new MenuItem("Lassi", 49)
+        )));
+        restaurants.add(new Restaurant("South Indian Cuisine", Arrays.asList(
+                new MenuItem("Plain Dosa", 149),
+                new MenuItem("Masala Dosa", 199),
+                new MenuItem("Idli Sambhar", 99),
+                new MenuItem("Sambhar Vada", 89)
+        )));
+        restaurants.add(new Restaurant("Apex Espresso", Arrays.asList(
+                new MenuItem("Cold Coffee", 149),
+                new MenuItem("Oreo Shake", 199),
+                new MenuItem("Maggi", 99),
+                new MenuItem("Sandwich", 129)
+        )));
+
+        // List to store order history
+        List<Order> orderHistory = new ArrayList<>();
+        List<MenuItem> cart = new ArrayList<>(); // Cart to store selected items
+        int orderCounter = 1;
+
+        boolean running = true;
+
+        while (running) {
+            if (!loggedIn) {
+                System.out.println("\nWelcome to the Food Ordering System!");
+                System.out.println("1. Login");
+                System.out.println("2. Signup");
+                System.out.println("3. Exit");
+                System.out.print("Choose an option: ");
+                int option = scanner.nextInt();
+
+                switch (option) {
+
+                    case 1 -> {
+                        System.out.print("\nEnter your username: ");
+                        String username = scanner.next();
+                        System.out.print("Enter your password: ");
+                        String password = scanner.next();
+
+                        if (password.length() < 8) {
+                            System.out.println("Password must be at least 8 characters long.");
+                        } else if (userDatabase.containsKey(username) && userDatabase.get(username).equals(password)) {
+                            System.out.println("Login successful!");
+                            loggedIn = true;
+                        } else {
+                            System.out.println("Invalid username or password. Please try again.");
+                        }
+                    }
+                    case 2 -> {
+                        System.out.print("\nEnter a username: ");
+                        String username = scanner.next();
+                        if (userDatabase.containsKey(username)) {
+                            System.out.println("Username already exists. Try a different one.");
+                        } else {
+                            System.out.print("Enter a password (at least 8 characters): ");
+                            String password = scanner.next();
+
+                            // Enforce password length rule
+                            if (password.length() < 8) {
+                                System.out.println("Password must be at least 8 characters long. Please try again.");
+                            } else {
+                                userDatabase.put(username, password);
+                                System.out.println("Signup successful! Please login to continue.");
+                            }
+                        }
+                    }
+
+                    case 3 -> {
+                        System.out.println("Exiting the Food Ordering System. ThankYou For Ordering!");
+                        running = false;
+                    }
+                    default -> System.out.println("Invalid option. Please try again.");
+                }
+            } else {
+                System.out.println("\n1. Add Items to Cart");
+                System.out.println("2. View Cart");
+                System.out.println("3. Place a New Order");
+                System.out.println("4. View Order History");
+                System.out.println("5. Update Order Status");
+                System.out.println("6. Add Feedback");
+                System.out.println("7. Logout");
+                System.out.print("Choose an option: ");
+                int option = scanner.nextInt();
+
+                switch (option) {
+                    case 1 -> {
+                        System.out.println("\nAvailable Restaurants:");
+                        for (int i = 0; i < restaurants.size(); i++) {
+                            System.out.printf("%d. %s%n", i + 1, restaurants.get(i).name);
+                        }
+
+                        System.out.print("\nSelect a restaurant (Enter the number): ");
+                        int restaurantChoice = scanner.nextInt();
+
+                        if (restaurantChoice < 1 || restaurantChoice > restaurants.size()) {
+                            System.out.println("Invalid choice. Returning to main menu.");
+                            break;
+                        }
+
+                        Restaurant selectedRestaurant = restaurants.get(restaurantChoice - 1);
+                        System.out.println("\nYou selected: " + selectedRestaurant.name);
+                        System.out.println("Menu:");
+
+                        List<MenuItem> menu = selectedRestaurant.menu;
+                        for (int i = 0; i < menu.size(); i++) {
+                            System.out.printf("%d. %s - Rs%.2f%n", i + 1, menu.get(i).name, menu.get(i).price);
+                        }
+
+                        boolean addingToCart = true;
+                        while (addingToCart) {
+                            System.out.print("\nEnter the item number to add to your cart (or 0 to finish): ");
+                            int choice = scanner.nextInt();
+
+                            if (choice == 0) {
+                                addingToCart = false;
+                            } else if (choice > 0 && choice <= menu.size()) {
+                                cart.add(menu.get(choice - 1));
+                                System.out.println(menu.get(choice - 1).name + " has been added to your cart.");
+                            } else {
+                                System.out.println("Invalid item choice.");
+                            }
+                        }
+                    }
+                    case 2 -> {
+                        if (cart.isEmpty()) {
+                            System.out.println("Your cart is empty.");
+                        } else {
+                            System.out.println("\nItems in your Cart:");
+                            double totalCost = 0;
+                            for (MenuItem item : cart) {
+                                System.out.printf("- %s: Rs%.2f%n", item.name, item.price);
+                                totalCost += item.price;
+                            }
+                            System.out.printf("Total: Rs%.2f%n", totalCost);
+                        }
+                    }
+                    case 3 -> {
+                        if (cart.isEmpty()) {
+                            System.out.println("Your cart is empty. Please add items first.");
+                        } else {
+                            scanner.nextLine();
+
+                            System.out.print("Enter your name: ");
+                            String customerName = scanner.nextLine();
+                            System.out.print("Enter your contact number: ");
+                            String customerContact = scanner.nextLine();
+                            System.out.print("Enter your address: ");
+                            String customerAddress = scanner.nextLine();
+
+                            // Calculate total cost
+                            double totalCost = 0;
+                            System.out.println("\nItems in your cart:");
+                            for (MenuItem item : cart) {
+                                System.out.printf("- %s: Rs%.2f%n", item.name, item.price);
+                                totalCost += item.price;
+                            }
+
+                            // Display total cost
+                            System.out.printf("Total cost for your order: Rs%.2f%n", totalCost);
+
+                            // Select payment method
+                            System.out.println("\nSelect a payment method:");
+                            System.out.println("1. Cash");
+                            System.out.println("2. UPI");
+                            System.out.println("3. Credit Card");
+                            System.out.println("4. Digital Wallet");
+                            System.out.print("Choose a payment method: ");
+                            int paymentChoice = scanner.nextInt();
+
+                            PaymentMethod paymentMethod = switch (paymentChoice) {
+                                case 1 -> PaymentMethod.CASH;
+                                case 2 -> {
+                                    // For UPI, generate a sample UPI ID and QR code
+                                    String upiId = "example@upi";
+                                    String qrCode = "upi://pay?pa=" + upiId + "&pn=FoodOrder&mc=1234&tid=1234567890&url=https://www.example.com";
+
+                                    // Display UPI details
+                                    System.out.println("\nUPI Payment Method Selected.");
+                                    System.out.println("Please scan the following QR code or use the UPI ID for payment:");
+                                    System.out.println("UPI ID: " + upiId);
+                                    System.out.println("QR Code (Link): " + qrCode);
+                                    yield PaymentMethod.UPI;
+                                }
+                                case 3 -> PaymentMethod.CREDIT_CARD;
+                                case 4 -> PaymentMethod.DIGITAL_WALLET;
+                                default -> {
+                                    System.out.println("Invalid choice. Defaulting to Cash.");
+                                    yield PaymentMethod.CASH;
+                                }
+                            };
+
+                            // Get the payment amount from the user
+                            System.out.print("Enter your payment amount: Rs");
+                            double payment = scanner.nextDouble();
+
+                            // Check if the payment is sufficient
+                            if (payment < totalCost) {
+                                System.out.printf("Insufficient payment! You are short by Rs%.2f%n", totalCost - payment);
+                            } else {
+                                // Simulate payment processing
+                                System.out.println("\nProcessing payment... Please wait.");
+                                try {
+                                    Thread.sleep(2000); // Simulate a delay for payment processing
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+
+                                // Payment successful message
+                                System.out.println("Payment successful via " + paymentMethod + ". Your order is now placed.");
+
+                                // Generate order number
+                                String orderNumber = "ORD" + orderCounter++;
+
+                                System.out.println("\nSelect a restaurant (Enter the number): ");
+                                int restaurantChoice = scanner.nextInt();
+                                String selectedRestaurantName = restaurants.get(restaurantChoice - 1).name;
+
+                                // Create order
+                                Order order = new Order(orderNumber, customerName, customerContact, customerAddress, selectedRestaurantName, cart, totalCost, paymentMethod);
+
+                                // Clear cart after order placement
+                                cart.clear();
+
+                                // Add to order history
+                                orderHistory.add(order);
+                                System.out.println("Order placed successfully. Your order number is: " + orderNumber);
+                            }
+                        }
+                    }
+
+
+
+                    case 4 -> {
+                        if (orderHistory.isEmpty()) {
+                            System.out.println("No orders found.");
+                        } else {
+                            System.out.println("\nYour Order History:");
+                            for (Order order : orderHistory) {
+                                order.displayOrder();
+                            }
+                        }
+                    }
+                    case 5 -> {
+                        System.out.println("\nEnter order number to update status: ");
+                        String orderNumber = scanner.next();
+
+                        Order order = null;
+                        for (Order ord : orderHistory) {
+                            if (ord.orderNumber.equals(orderNumber)) {
+                                order = ord;
+                                break;
+                            }
+                        }
+
+                        if (order != null) {
+                            System.out.println("Current status: " + order.status);
+                            System.out.println("Enter new status (1. PREPARING, 2. OUT_FOR_DELIVERY, 3. PICKED_UP, 4. DELIVERED): ");
+                            int statusChoice = scanner.nextInt();
+                            switch (statusChoice) {
+                                case 1 -> order.updateStatus(OrderStatus.PREPARING);
+                                case 2 -> order.updateStatus(OrderStatus.OUT_FOR_DELIVERY);
+                                case 3 -> order.updateStatus(OrderStatus.PICKED_UP);
+                                case 4 -> order.updateStatus(OrderStatus.DELIVERED);
+                                default -> System.out.println("Invalid status.");
+                            }
+                            System.out.println("Order status updated.");
+                        } else {
+                            System.out.println("Order not found.");
+                        }
+                    }
+                    case 6 -> {
+                        System.out.println("\nEnter order number to provide feedback: ");
+                        String orderNumber = scanner.next();
+
+                        Order order = null;
+                        for (Order ord : orderHistory) {
+                            if (ord.orderNumber.equals(orderNumber)) {
+                                order = ord;
+                                break;
+                            }
+                        }
+
+                        if (order != null && order.status == OrderStatus.DELIVERED) {
+                            System.out.print("Enter your rating (1-5): ");
+                            int rating = scanner.nextInt();
+                            scanner.nextLine(); // Consume the newline
+                            System.out.print("Enter your feedback: ");
+                            String feedback = scanner.nextLine();
+
+                            order.addFeedback(rating, feedback);
+                            System.out.println("Thank you for your feedback!");
+                        } else {
+                            System.out.println("Order not found or not delivered yet.");
+                        }
+                    }
+                    case 7 -> {
+                        loggedIn = false;
+                        System.out.println("You have logged out.");
+                    }
+                    default -> System.out.println("Invalid choice. Please try again.");
+                }
+            }
+        }
+
+        scanner.close();
+    }
+}
